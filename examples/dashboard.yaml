@@ -18,20 +18,6 @@ text_color: "#ffffff"
 muted_text_color: "#a7a7a7"
 tile_color: "#1a1b1d"
 border_color: "#2a2b2e"
-
----
-type: custom:calendar-card-pro
-entities:
-	- calendar.family
-days_to_show: 3
-show_location: false
-show_month: false
-background_color: "#101112"
-event_color: "#ffffff"
-time_color: "#a7a7a7"
-weekday_color: "#a7a7a7"
-day_color: "#ffffff"
-month_color: "#a7a7a7"
 show_current_lux: true
 show_lux_change: true
 show_threshold: true

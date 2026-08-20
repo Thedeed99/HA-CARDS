@@ -3,7 +3,7 @@
 Verzamelproject voor Home Assistant dashboardkaarten. De kaarten zijn bedoeld als HACS custom dashboard resource en worden gebundeld in `ha-cards.js`.
 
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)
-![Version](https://img.shields.io/badge/Version-1.1.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.0.1-blue.svg)
 
 ## Kaarten
 
@@ -36,20 +36,11 @@ Een donkere afvalkalenderkaart in dezelfde stijl als de brievenbuskaart, met een
 - Toont komende datums voor GFT, Papier / Karton, PMD/Rest en optioneel Rest
 - Entiteiten en blokken zijn bewerkbaar in de UI-editor
 
-### Calendar Card Pro (`custom:calendar-card-pro`)
-
-Calendar Card Pro is vendored als MIT dependency en standaard gestyled naar de donkere HA-CARDS stijl. De functionaliteit blijft van Calendar Card Pro; alleen de standaardkleuren, kaartachtergrond, randen en eventtegels zijn aangepast.
-
-- Ondersteunt de originele Calendar Card Pro configuratie
-- Gebruikt `calendar.*` entiteiten
-- Laadt de bijbehorende editor uit `vendor/calendar-card-pro/editor.js`
-- Licentie en attribution staan in `vendor/calendar-card-pro/LICENSE` en `vendor/calendar-card-pro/NOTICE`
-
 ## Installatie via HACS
 
 1. HACS -> **Custom repositories** -> `https://github.com/Thedeed99/HA-CARDS`, type **Dashboard**
 2. Downloaden en Home Assistant herstarten
-3. Dashboard -> kaart toevoegen -> **Calendar Card Pro**, **HA Waste Card**, **HA Mailbox Card** of **HA Status Card**
+3. Dashboard -> kaart toevoegen -> **HA Waste Card**, **HA Mailbox Card** of **HA Status Card**
 
 ## Configuratie
 
@@ -96,21 +87,6 @@ text_color: "#ffffff"
 muted_text_color: "#a7a7a7"
 tile_color: "#1a1b1d"
 border_color: "#2a2b2e"
-```
-
-```yaml
-type: custom:calendar-card-pro
-entities:
-	- calendar.family
-days_to_show: 3
-show_location: false
-show_month: false
-background_color: "#101112"
-event_color: "#ffffff"
-time_color: "#a7a7a7"
-weekday_color: "#a7a7a7"
-day_color: "#ffffff"
-month_color: "#a7a7a7"
 ```
 
 Voor registratie zonder open dashboard maak je in Home Assistant een `input_datetime` en automation aan. Zie [examples/mailbox-package.yaml](examples/mailbox-package.yaml) voor een compleet voorbeeld.
