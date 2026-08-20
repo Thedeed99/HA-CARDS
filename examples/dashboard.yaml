@@ -1,0 +1,40 @@
+type: custom:ha-status-card
+title: Woonkamer
+entity: sensor.woonkamer_temperatuur
+secondary_entity: sensor.woonkamer_luchtvochtigheid
+icon: mdi:sofa
+background_color: "#101112"
+accent_color: "#d8d8d8"
+text_color: "#ffffff"
+
+---
+type: custom:ha-mailbox-card
+title: Brievenbus
+entity: sensor.brievenbus_illuminance
+last_opened_entity: input_datetime.brievenbus_laatst_geopend
+threshold: 35
+background_color: "#101112"
+text_color: "#ffffff"
+muted_text_color: "#a7a7a7"
+tile_color: "#1a1b1d"
+border_color: "#2a2b2e"
+show_current_lux: true
+show_lux_change: true
+show_threshold: true
+show_sensor_state: true
+
+---
+type: custom:ha-waste-card
+title: Afval
+gft_entity: sensor.gft
+paper_entity: sensor.papier_karton
+pmd_entity: sensor.pmd_rest
+rest_entity: sensor.restafval
+show_today: true
+show_tomorrow: true
+show_waste_types: true
+background_color: "#101112"
+text_color: "#ffffff"
+muted_text_color: "#a7a7a7"
+tile_color: "#1a1b1d"
+border_color: "#2a2b2e"
