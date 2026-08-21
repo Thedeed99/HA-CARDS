@@ -3,7 +3,7 @@
 Verzamelproject voor Home Assistant dashboardkaarten. De kaarten zijn bedoeld als HACS custom dashboard resource en worden gebundeld in `ha-cards.js`.
 
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)
-![Version](https://img.shields.io/badge/Version-1.0.3-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.0.4-blue.svg)
 
 ## Kaarten
 

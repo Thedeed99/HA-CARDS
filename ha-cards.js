@@ -2,7 +2,7 @@
  * HA-CARDS - verzameling Home Assistant dashboardkaarten.
  */
 
-const HA_CARDS_VERSION = "1.0.3";
+const HA_CARDS_VERSION = "1.0.4";
 
 console.info(
   `%c HA-CARDS %c v${HA_CARDS_VERSION} `,
@@ -656,8 +656,8 @@ class HaMailboxCard extends HaCardsBase {
       </ha-card>
     `;
 
-    this.shadowRoot.querySelector(".header-meta")?.addEventListener("click", () => this._openMoreInfo(this._config.motion_entity));
-    this.shadowRoot.querySelector(".visual")?.addEventListener("click", () => this._openMoreInfo(entityId));
+    this.shadowRoot.querySelector(".header-meta")?.addEventListener("click", () => this._openMoreInfo(entityId));
+    this.shadowRoot.querySelector(".visual")?.addEventListener("click", () => this._openMoreInfo(this._config.motion_entity));
   }
 }
 
