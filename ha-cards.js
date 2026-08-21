@@ -2,7 +2,7 @@
  * HA-CARDS - verzameling Home Assistant dashboardkaarten.
  */
 
-const HA_CARDS_VERSION = "1.1.1";
+const HA_CARDS_VERSION = "1.1.2";
 
 console.info(
   `%c HA-CARDS %c v${HA_CARDS_VERSION} `,
@@ -78,6 +78,7 @@ const TRANSLATIONS = {
     crawlspaceRiskHigh: "High",
     crawlspaceRiskVeryHigh: "Very high",
     crawlspaceRiskNote: "Indicative estimate from temperature and relative humidity",
+    crawlspaceRiskExplanation: "The estimate weighs relative humidity most heavily and adds a temperature factor. It is an indication, not a building inspection.",
   },
   nl: {
     unavailable: "Niet beschikbaar",
@@ -102,6 +103,7 @@ const TRANSLATIONS = {
     crawlspaceRiskHigh: "Hoog",
     crawlspaceRiskVeryHigh: "Zeer hoog",
     crawlspaceRiskNote: "Indicatie op basis van temperatuur en relatieve luchtvochtigheid",
+    crawlspaceRiskExplanation: "De indicatie weegt relatieve luchtvochtigheid het zwaarst en telt een temperatuurfactor op. Het is geen bouwkundige inspectie.",
   },
 };
 
@@ -839,6 +841,12 @@ class HaCrawlspaceCard extends HaCardsBase {
         .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
         .metric { min-width: 0; min-height: 84px; padding: 12px; border: 1px solid ${border}; border-radius: 10px; background: ${tile}; box-sizing: border-box; }
         .metric.risk { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        details.risk { display: block; }
+        .risk-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
+        .risk-summary::-webkit-details-marker { display: none; }
+        .risk-summary::after { content: "＋"; color: ${mutedText}; font-size: 1rem; font-weight: 700; }
+        details[open] .risk-summary::after { content: "－"; }
+        .risk-explanation { margin-top: 10px; padding-top: 10px; border-top: 1px solid ${border}; color: ${mutedText}; font-size: .72rem; line-height: 1.4; }
         .metric.clickable { cursor: pointer; }
         .label { color: ${mutedText}; font-size: .7rem; font-weight: 800; line-height: 1.1; }
         .value { margin-top: 8px; font-size: 1.45rem; font-weight: 900; line-height: 1; overflow-wrap: anywhere; }
@@ -865,13 +873,16 @@ class HaCrawlspaceCard extends HaCardsBase {
             <div class="label">${this._t("crawlspaceHumidity")}</div>
             <div class="value">${this._formatClimateValue(humidityEntity, "%")}</div>
           </div>
-          <div class="metric risk">
+          <details class="metric risk">
+            <summary class="risk-summary">
             <div>
               <div class="label">${this._t("crawlspaceMoldRisk")}</div>
               <div class="value">${risk ? `${risk.label} · ${risk.score}%` : "--"}</div>
             </div>
             <div class="risk-score ${riskClass}">${risk ? `${risk.score}%` : "--"}</div>
-          </div>
+            </summary>
+            <div class="risk-explanation">${this._t("crawlspaceRiskExplanation")}</div>
+          </details>
         </div>
         <div class="note">${this._t("crawlspaceRiskNote")}</div>
       </ha-card>
