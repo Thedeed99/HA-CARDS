@@ -2,7 +2,7 @@
  * HA-CARDS - verzameling Home Assistant dashboardkaarten.
  */
 
-const HA_CARDS_VERSION = "1.0.4";
+const HA_CARDS_VERSION = "1.1.1";
 
 console.info(
   `%c HA-CARDS %c v${HA_CARDS_VERSION} `,
