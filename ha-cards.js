@@ -2,7 +2,7 @@
  * HA-CARDS - verzameling Home Assistant dashboardkaarten.
  */
 
-const HA_CARDS_VERSION = "1.0.1";
+const HA_CARDS_VERSION = "1.0.2";
 
 console.info(
   `%c HA-CARDS %c v${HA_CARDS_VERSION} `,
@@ -19,6 +19,7 @@ const DEFAULTS = {
   tile_color: "#1a1b1d",
   border_color: "#2a2b2e",
   entity: undefined,
+  motion_entity: undefined,
   last_opened_entity: undefined,
   secondary_entity: undefined,
   icon: "mdi:home-assistant",
@@ -33,7 +34,8 @@ const DEFAULTS = {
 const MAILBOX_EDITOR_LABELS = {
   title: "Titel",
   entity: "Luxsensor",
-  last_opened_entity: "Laatst geopend entiteit",
+  motion_entity: "Bewegingssensor entiteit",
+  last_opened_entity: "Laatst geleegd entiteit",
   threshold: "Lux drempel",
   show_current_lux: "Toon huidige lux",
   show_lux_change: "Toon lux verschil",
@@ -58,7 +60,9 @@ const TRANSLATIONS = {
     unknown: "Unknown",
     empty: "Add an entity in the card editor.",
     mailboxNever: "No opening detected yet",
-    mailboxLastOpened: "Last opened",
+    mailboxLastOpened: "Mail received",
+    mailboxLastEmptied: "Last emptied",
+    mailboxNoMotion: "No motion detected yet",
     mailboxLuxChange: "Lux change",
     mailboxCurrentLux: "Current lux",
     mailboxThreshold: "Threshold",
@@ -72,7 +76,9 @@ const TRANSLATIONS = {
     unknown: "Onbekend",
     empty: "Voeg een entiteit toe in de kaart-editor.",
     mailboxNever: "Nog geen opening gemeten",
-    mailboxLastOpened: "Laatst geopend",
+    mailboxLastOpened: "Post ontvangen",
+    mailboxLastEmptied: "Laatst geleegd",
+    mailboxNoMotion: "Nog geen beweging gemeten",
     mailboxLuxChange: "Lux verschil",
     mailboxCurrentLux: "Huidige lux",
     mailboxThreshold: "Drempel",
@@ -166,7 +172,7 @@ class HaCardsBase extends HTMLElement {
     }).format(date);
   }
 
-  _dateFromEntity(entityId) {
+  _dateFromEntity(entityId, useStateChangeFallback = false) {
     const stateObj = this._state(entityId);
     if (!stateObj || ["unavailable", "unknown"].includes(stateObj.state)) return undefined;
 
@@ -174,7 +180,14 @@ class HaCardsBase extends HTMLElement {
     if (Number.isFinite(timestamp)) return new Date(timestamp * 1000);
 
     const parsed = new Date(String(stateObj.state).replace(" ", "T"));
-    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+
+    if (useStateChangeFallback) {
+      const changed = new Date(stateObj.last_changed || stateObj.last_updated || "");
+      if (!Number.isNaN(changed.getTime())) return changed;
+    }
+
+    return undefined;
   }
 
   _formatMailboxDateTime(value) {
@@ -321,6 +334,7 @@ class HaMailboxCard extends HaCardsBase {
       type: "custom:ha-mailbox-card",
       title: "Brievenbus",
       entity,
+      motion_entity: Object.keys(hass?.states || {}).find((id) => id.startsWith("binary_sensor.") && id.includes("motion")),
       last_opened_entity: "input_datetime.brievenbus_laatst_geopend",
       threshold: 25,
       show_current_lux: true,
@@ -408,9 +422,11 @@ class HaMailboxCard extends HaCardsBase {
     const tile = toCssColor(this._config.tile_color, DEFAULTS.tile_color);
     const border = toCssColor(this._config.border_color, DEFAULTS.border_color);
     const storedLastOpened = this._dateFromEntity(this._config.last_opened_entity);
+    const motionDate = this._dateFromEntity(this._config.motion_entity, true);
     const localLastOpened = this._lastOpened ? new Date(this._lastOpened) : undefined;
-    const lastOpenedDate = storedLastOpened || localLastOpened;
-    const lastOpened = lastOpenedDate ? this._formatMailboxDateTime(lastOpenedDate) : this._t("mailboxNever");
+    const postReceivedDate = motionDate || localLastOpened;
+    const postReceived = postReceivedDate ? this._formatMailboxDateTime(postReceivedDate) : this._t("mailboxNoMotion");
+    const lastEmptied = storedLastOpened ? this._formatMailboxDateTime(storedLastOpened) : "--";
     const currentLuxLabel = Number.isFinite(currentLux) ? `${Math.round(currentLux)} lx` : this._formatValue(entityId);
     const lastDeltaLabel = Number.isFinite(this._lastDelta) ? `${Math.round(this._lastDelta)} lx` : "--";
     const tiles = [
@@ -471,6 +487,28 @@ class HaMailboxCard extends HaCardsBase {
           font-weight: 800;
           line-height: 1.1;
         }
+        .header-meta {
+          margin-left: auto;
+          min-width: 0;
+          text-align: right;
+        }
+        .header-meta-label {
+          color: ${mutedText};
+          font-size: .62rem;
+          font-weight: 800;
+          line-height: 1.1;
+        }
+        .header-meta-value {
+          margin-top: 2px;
+          color: ${text};
+          font-size: .74rem;
+          font-weight: 900;
+          line-height: 1.1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 140px;
+        }
         .visual {
           display: grid;
           justify-items: center;
@@ -518,8 +556,8 @@ class HaMailboxCard extends HaCardsBase {
           border-radius: 9px 9px 4px 4px;
           background: #303136;
           transform-origin: bottom center;
-          transform: rotateX(${this._lastOpened ? "28deg" : "0deg"});
-          opacity: ${this._lastOpened ? ".98" : ".72"};
+          transform: rotateX(${postReceivedDate ? "28deg" : "0deg"});
+          opacity: ${postReceivedDate ? ".98" : ".72"};
         }
         .envelope {
           position: absolute;
@@ -530,7 +568,7 @@ class HaMailboxCard extends HaCardsBase {
           border-radius: 4px;
           background: #c7c8cc;
           clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-          opacity: ${this._lastOpened ? ".96" : ".46"};
+          opacity: ${postReceivedDate ? ".96" : ".46"};
         }
         .envelope::before,
         .envelope::after {
@@ -592,8 +630,10 @@ class HaMailboxCard extends HaCardsBase {
       <ha-card>
         <div class="header">
           <ha-icon icon="${this._config.icon || "mdi:mailbox-up"}"></ha-icon>
-          <div>
-            <div class="title">${this._config.title || "Brievenbus"}</div>
+          <div class="title">${this._config.title || "Brievenbus"}</div>
+          <div class="header-meta">
+            <div class="header-meta-label">${this._t("mailboxLastEmptied")}</div>
+            <div class="header-meta-value">${lastEmptied}</div>
           </div>
         </div>
         <div class="visual" tabindex="0" role="button">
@@ -604,7 +644,7 @@ class HaMailboxCard extends HaCardsBase {
             <div class="envelope"></div>
           </div>
           <div class="opened-label">${this._t("mailboxLastOpened")}</div>
-          <div class="opened">${lastOpened}</div>
+          <div class="opened">${postReceived}</div>
         </div>
         <div class="grid">
           ${tiles}
@@ -630,6 +670,7 @@ class HaMailboxCardEditor extends HTMLElement {
     this._config = {
       title: "Brievenbus",
       threshold: DEFAULTS.threshold,
+      motion_entity: undefined,
       last_opened_entity: undefined,
       show_current_lux: true,
       show_lux_change: true,
@@ -664,6 +705,7 @@ class HaMailboxCardEditor extends HTMLElement {
     this._form.schema = [
       { name: "title", selector: { text: {} } },
       { name: "entity", required: true, selector: { entity: { domain: "sensor" } } },
+      { name: "motion_entity", selector: { entity: { domain: "binary_sensor" } } },
       { name: "last_opened_entity", selector: { entity: {} } },
       { name: "threshold", selector: { number: { min: 0, step: 1, mode: "box", unit_of_measurement: "lx" } } },
       { name: "show_current_lux", selector: { boolean: {} } },

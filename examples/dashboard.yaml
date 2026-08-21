@@ -11,6 +11,7 @@ text_color: "#ffffff"
 type: custom:ha-mailbox-card
 title: Brievenbus
 entity: sensor.brievenbus_illuminance
+motion_entity: binary_sensor.brievenbus_beweging
 last_opened_entity: input_datetime.brievenbus_laatst_geopend
 threshold: 35
 background_color: "#101112"

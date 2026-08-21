@@ -3,7 +3,7 @@
 Verzamelproject voor Home Assistant dashboardkaarten. De kaarten zijn bedoeld als HACS custom dashboard resource en worden gebundeld in `ha-cards.js`.
 
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)
-![Version](https://img.shields.io/badge/Version-1.0.1-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.0.2-blue.svg)
 
 ## Kaarten
 
@@ -18,10 +18,10 @@ Een compacte kaart voor een enkele Home Assistant entiteit:
 
 ### HA Mailbox Card (`custom:ha-mailbox-card`)
 
-Een donkere brievenbuskaart met een grote brievenbus bovenin en de status daaronder. De kaart kijkt naar een luxsensor en registreert een opening wanneer het verschil tussen de vorige en huidige luxwaarde groter is dan de ingestelde drempel.
+Een donkere brievenbuskaart met een grote brievenbus bovenin en de status daaronder. De kaart gebruikt een bewegingssensor voor `Post ontvangen` en een aparte helper-entiteit voor `Laatst geleegd`.
 
-- Toont wanneer de brievenbus voor het laatst is geopend
-- Toont `Vandaag HH:mm` als de opening vandaag was, anders datum met tijd
+- Toont linksboven `Laatst geleegd` via een aparte entiteit
+- Toont centraal `Post ontvangen` met datum/tijd op basis van een bewegingssensor
 - Drempel instelbaar met `threshold`
 - Laat huidige luxwaarde, laatste luxverschil en drempel zien
 - Onderste vier blokken zijn in de UI-editor met vinkjes aan of uit te zetten
@@ -59,6 +59,7 @@ text_color: "#ffffff"
 type: custom:ha-mailbox-card
 title: Brievenbus
 entity: sensor.brievenbus_illuminance
+motion_entity: binary_sensor.brievenbus_beweging
 last_opened_entity: input_datetime.brievenbus_laatst_geopend
 threshold: 35
 background_color: "#101112"
