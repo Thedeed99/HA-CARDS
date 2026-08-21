@@ -2,7 +2,7 @@
  * HA-CARDS - verzameling Home Assistant dashboardkaarten.
  */
 
-const HA_CARDS_VERSION = "1.0.2";
+const HA_CARDS_VERSION = "1.0.3";
 
 console.info(
   `%c HA-CARDS %c v${HA_CARDS_VERSION} `,
@@ -492,6 +492,10 @@ class HaMailboxCard extends HaCardsBase {
           min-width: 0;
           text-align: right;
         }
+        .header-meta.is-clickable,
+        .visual.is-clickable {
+          cursor: pointer;
+        }
         .header-meta-label {
           color: ${mutedText};
           font-size: .62rem;
@@ -631,12 +635,12 @@ class HaMailboxCard extends HaCardsBase {
         <div class="header">
           <ha-icon icon="${this._config.icon || "mdi:mailbox-up"}"></ha-icon>
           <div class="title">${this._config.title || "Brievenbus"}</div>
-          <div class="header-meta">
+          <div class="header-meta ${this._config.motion_entity ? "is-clickable" : ""}" tabindex="0" role="button">
             <div class="header-meta-label">${this._t("mailboxLastEmptied")}</div>
             <div class="header-meta-value">${lastEmptied}</div>
           </div>
         </div>
-        <div class="visual" tabindex="0" role="button">
+        <div class="visual ${entityId ? "is-clickable" : ""}" tabindex="0" role="button">
           <div class="mailbox" aria-hidden="true">
             <div class="backplate"></div>
             <div class="lid"></div>
@@ -652,6 +656,7 @@ class HaMailboxCard extends HaCardsBase {
       </ha-card>
     `;
 
+    this.shadowRoot.querySelector(".header-meta")?.addEventListener("click", () => this._openMoreInfo(this._config.motion_entity));
     this.shadowRoot.querySelector(".visual")?.addEventListener("click", () => this._openMoreInfo(entityId));
   }
 }
