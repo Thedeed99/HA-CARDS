@@ -3,7 +3,7 @@
 Verzamelproject voor Home Assistant dashboardkaarten. De kaarten zijn bedoeld als HACS custom dashboard resource en worden gebundeld in `ha-cards.js`.
 
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)
-![Version](https://img.shields.io/badge/Version-1.0.4-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.1.0-blue.svg)
 
 ## Kaarten
 
@@ -35,6 +35,15 @@ Een donkere afvalkalenderkaart in dezelfde stijl als de brievenbuskaart, met een
 - Toont of er morgen afval wordt opgehaald
 - Toont komende datums voor GFT, Papier / Karton, PMD/Rest en optioneel Rest
 - Entiteiten en blokken zijn bewerkbaar in de UI-editor
+
+### HA Crawlspace Card (`custom:ha-crawlspace-card`)
+
+Een kaart voor de kruipruimte die temperatuur en relatieve luchtvochtigheid toont. De kaart berekent daarnaast een indicatief schimmelrisico op basis van beide waarden.
+
+- Toont temperatuur en luchtvochtigheid
+- Geeft een risiconiveau en indicatieve score weer
+- Klik op een meetwaarde om de sensor-details te openen
+- De score is een praktische indicatie, geen bouwkundige diagnose; ventilatie, materiaal en oppervlaktetemperatuur worden niet gemeten
 
 ## Installatie via HACS
 
@@ -83,6 +92,19 @@ rest_entity: sensor.restafval
 show_today: true
 show_tomorrow: true
 show_waste_types: true
+background_color: "#101112"
+text_color: "#ffffff"
+muted_text_color: "#a7a7a7"
+tile_color: "#1a1b1d"
+border_color: "#2a2b2e"
+```
+
+```yaml
+type: custom:ha-crawlspace-card
+title: Kruipruimte
+temperature_entity: sensor.kruipruimte_temperatuur
+humidity_entity: sensor.kruipruimte_luchtvochtigheid
+icon: mdi:home-floor-negative-1
 background_color: "#101112"
 text_color: "#ffffff"
 muted_text_color: "#a7a7a7"

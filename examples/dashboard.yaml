@@ -39,3 +39,15 @@ text_color: "#ffffff"
 muted_text_color: "#a7a7a7"
 tile_color: "#1a1b1d"
 border_color: "#2a2b2e"
+
+---
+type: custom:ha-crawlspace-card
+title: Kruipruimte
+temperature_entity: sensor.kruipruimte_temperatuur
+humidity_entity: sensor.kruipruimte_luchtvochtigheid
+icon: mdi:home-floor-negative-1
+background_color: "#101112"
+text_color: "#ffffff"
+muted_text_color: "#a7a7a7"
+tile_color: "#1a1b1d"
+border_color: "#2a2b2e"

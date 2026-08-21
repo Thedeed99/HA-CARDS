@@ -70,6 +70,14 @@ const TRANSLATIONS = {
     wasteTomorrow: "Tomorrow",
     wasteNoneToday: "No pickup today",
     wasteNoneTomorrow: "No pickup tomorrow",
+    crawlspaceTemperature: "Temperature",
+    crawlspaceHumidity: "Humidity",
+    crawlspaceMoldRisk: "Mold risk",
+    crawlspaceRiskLow: "Low",
+    crawlspaceRiskElevated: "Elevated",
+    crawlspaceRiskHigh: "High",
+    crawlspaceRiskVeryHigh: "Very high",
+    crawlspaceRiskNote: "Indicative estimate from temperature and relative humidity",
   },
   nl: {
     unavailable: "Niet beschikbaar",
@@ -86,6 +94,14 @@ const TRANSLATIONS = {
     wasteTomorrow: "Morgen",
     wasteNoneToday: "Geen ophaal vandaag",
     wasteNoneTomorrow: "Geen ophaal morgen",
+    crawlspaceTemperature: "Temperatuur",
+    crawlspaceHumidity: "Luchtvochtigheid",
+    crawlspaceMoldRisk: "Schimmelrisico",
+    crawlspaceRiskLow: "Laag",
+    crawlspaceRiskElevated: "Verhoogd",
+    crawlspaceRiskHigh: "Hoog",
+    crawlspaceRiskVeryHigh: "Zeer hoog",
+    crawlspaceRiskNote: "Indicatie op basis van temperatuur en relatieve luchtvochtigheid",
   },
 };
 
@@ -739,6 +755,192 @@ class HaMailboxCardEditor extends HTMLElement {
   }
 }
 
+class HaCrawlspaceCard extends HaCardsBase {
+  static getStubConfig(hass) {
+    const sensorIds = Object.keys(hass?.states || {}).filter((id) => id.startsWith("sensor."));
+    return {
+      type: "custom:ha-crawlspace-card",
+      title: "Kruipruimte",
+      temperature_entity: sensorIds.find((id) => id.includes("temperatuur") || id.includes("temperature")),
+      humidity_entity: sensorIds.find((id) => id.includes("vocht") || id.includes("humidity")),
+      icon: "mdi:home-floor-negative-1",
+      background_color: DEFAULTS.background_color,
+      text_color: DEFAULTS.text_color,
+      tile_color: DEFAULTS.tile_color,
+      border_color: DEFAULTS.border_color,
+    };
+  }
+
+  static getConfigElement() {
+    return document.createElement("ha-crawlspace-card-editor");
+  }
+
+  setConfig(config) {
+    super.setConfig({ title: "Kruipruimte", icon: "mdi:home-floor-negative-1", ...config });
+  }
+
+  _numericValue(entityId) {
+    const stateObj = this._state(entityId);
+    if (!stateObj || ["unavailable", "unknown"].includes(stateObj.state)) return undefined;
+    const value = Number(stateObj.state);
+    return Number.isFinite(value) ? value : undefined;
+  }
+
+  _formatClimateValue(entityId, fallbackUnit) {
+    const stateObj = this._state(entityId);
+    const value = this._numericValue(entityId);
+    if (value === undefined) return stateObj ? this._formatValue(entityId, 1) : "--";
+    const language = this._hass?.locale?.language || this._hass?.language || "nl";
+    const unit = stateObj?.attributes?.unit_of_measurement || fallbackUnit;
+    return `${value.toLocaleString(language, { maximumFractionDigits: 1 })} ${unit}`;
+  }
+
+  _moldRisk(temperature, humidity) {
+    if (temperature === undefined || humidity === undefined) return undefined;
+
+    const humidityRisk = Math.max(0, Math.min(86, (humidity - 52) * 2.15));
+    const temperatureFactor = temperature >= 10 && temperature <= 30 ? 14 : temperature >= 5 && temperature <= 35 ? 7 : 2;
+    const score = Math.round(Math.min(99, humidityRisk + temperatureFactor));
+    const key = score >= 75 ? "crawlspaceRiskVeryHigh" : score >= 50 ? "crawlspaceRiskHigh" : score >= 25 ? "crawlspaceRiskElevated" : "crawlspaceRiskLow";
+    return { score, label: this._t(key) };
+  }
+
+  _render() {
+    if (!this.shadowRoot || !this._config) return;
+
+    const temperatureEntity = this._config.temperature_entity;
+    const humidityEntity = this._config.humidity_entity;
+    const temperature = this._numericValue(temperatureEntity);
+    const humidity = this._numericValue(humidityEntity);
+    const risk = this._moldRisk(temperature, humidity);
+    const background = toCssColor(this._config.background_color, DEFAULTS.background_color);
+    const text = toCssColor(this._config.text_color, DEFAULTS.text_color);
+    const mutedText = toCssColor(this._config.muted_text_color, DEFAULTS.muted_text_color);
+    const tile = toCssColor(this._config.tile_color, DEFAULTS.tile_color);
+    const border = toCssColor(this._config.border_color, DEFAULTS.border_color);
+    const riskClass = risk ? (risk.score >= 75 ? "very-high" : risk.score >= 50 ? "high" : risk.score >= 25 ? "elevated" : "low") : "unknown";
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; }
+        ha-card {
+          background: linear-gradient(180deg, ${background} 0%, #0d0e0f 100%);
+          color: ${text};
+          border: 1px solid ${border};
+          border-radius: var(--ha-card-border-radius, 18px);
+          padding: 16px;
+          box-sizing: border-box;
+          overflow: hidden;
+          box-shadow: 0 16px 30px rgba(0,0,0,.24);
+        }
+        .header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .header ha-icon { width: 23px; height: 23px; color: ${text}; }
+        .title { font-size: 1rem; font-weight: 800; line-height: 1.1; }
+        .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .metric { min-width: 0; min-height: 84px; padding: 12px; border: 1px solid ${border}; border-radius: 10px; background: ${tile}; box-sizing: border-box; }
+        .metric.risk { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .metric.clickable { cursor: pointer; }
+        .label { color: ${mutedText}; font-size: .7rem; font-weight: 800; line-height: 1.1; }
+        .value { margin-top: 8px; font-size: 1.45rem; font-weight: 900; line-height: 1; overflow-wrap: anywhere; }
+        .risk .value { margin-top: 5px; }
+        .risk-score { flex: 0 0 auto; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; border: 4px solid currentColor; color: #8fd3ff; font-size: 1rem; font-weight: 900; }
+        .risk-score.low { color: #8fd3ff; }
+        .risk-score.elevated { color: #d5c777; }
+        .risk-score.high { color: #e6a36f; }
+        .risk-score.very-high { color: #e88484; }
+        .risk-score.unknown { color: ${mutedText}; }
+        .note { margin-top: 11px; color: ${mutedText}; font-size: .68rem; line-height: 1.3; }
+      </style>
+      <ha-card>
+        <div class="header">
+          <ha-icon icon="${this._config.icon || "mdi:home-floor-negative-1"}"></ha-icon>
+          <div class="title">${this._config.title || "Kruipruimte"}</div>
+        </div>
+        <div class="metrics">
+          <div class="metric clickable" data-entity="${temperatureEntity || ""}" tabindex="0" role="button">
+            <div class="label">${this._t("crawlspaceTemperature")}</div>
+            <div class="value">${this._formatClimateValue(temperatureEntity, "°C")}</div>
+          </div>
+          <div class="metric clickable" data-entity="${humidityEntity || ""}" tabindex="0" role="button">
+            <div class="label">${this._t("crawlspaceHumidity")}</div>
+            <div class="value">${this._formatClimateValue(humidityEntity, "%")}</div>
+          </div>
+          <div class="metric risk">
+            <div>
+              <div class="label">${this._t("crawlspaceMoldRisk")}</div>
+              <div class="value">${risk ? `${risk.label} · ${risk.score}%` : "--"}</div>
+            </div>
+            <div class="risk-score ${riskClass}">${risk ? `${risk.score}%` : "--"}</div>
+          </div>
+        </div>
+        <div class="note">${this._t("crawlspaceRiskNote")}</div>
+      </ha-card>
+    `;
+
+    this.shadowRoot.querySelectorAll("[data-entity]").forEach((element) => {
+      if (!element.dataset.entity) return;
+      element.addEventListener("click", () => this._openMoreInfo(element.dataset.entity));
+    });
+  }
+}
+
+class HaCrawlspaceCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._config = {};
+    this._hass = undefined;
+    this._form = undefined;
+    this._initialized = false;
+  }
+
+  setConfig(config) {
+    this._config = { title: "Kruipruimte", ...config };
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._updateForm();
+  }
+
+  _render() {
+    if (!this.shadowRoot || this._initialized) {
+      this._updateForm();
+      return;
+    }
+
+    this._initialized = true;
+    this.shadowRoot.innerHTML = `<ha-form></ha-form>`;
+    this._form = this.shadowRoot.querySelector("ha-form");
+    this._form.schema = [
+      { name: "title", selector: { text: {} } },
+      { name: "temperature_entity", required: true, selector: { entity: { domain: "sensor", device_class: "temperature" } } },
+      { name: "humidity_entity", required: true, selector: { entity: { domain: "sensor", device_class: "humidity" } } },
+    ];
+    this._form.computeLabel = (schema) => ({
+      title: "Titel",
+      temperature_entity: "Temperatuursensor",
+      humidity_entity: "Luchtvochtigheidssensor",
+    }[schema.name] || schema.name);
+    this._form.addEventListener("value-changed", (event) => {
+      this._config = event.detail.value;
+      this.dispatchEvent(new CustomEvent("config-changed", {
+        bubbles: true,
+        composed: true,
+        detail: { config: this._config },
+      }));
+    });
+    this._updateForm();
+  }
+
+  _updateForm() {
+    if (!this._form) return;
+    this._form.hass = this._hass;
+    this._form.data = this._config;
+  }
+}
+
 class HaWasteCard extends HaCardsBase {
   static getStubConfig(hass) {
     const sensorIds = Object.keys(hass?.states || {}).filter((id) => id.startsWith("sensor."));
@@ -1148,6 +1350,8 @@ class HaWasteCardEditor extends HTMLElement {
 customElements.define("ha-status-card", HaStatusCard);
 customElements.define("ha-mailbox-card", HaMailboxCard);
 customElements.define("ha-mailbox-card-editor", HaMailboxCardEditor);
+customElements.define("ha-crawlspace-card", HaCrawlspaceCard);
+customElements.define("ha-crawlspace-card-editor", HaCrawlspaceCardEditor);
 customElements.define("ha-waste-card", HaWasteCard);
 customElements.define("ha-waste-card-editor", HaWasteCardEditor);
 
@@ -1161,6 +1365,11 @@ window.customCards.push({
   type: "ha-mailbox-card",
   name: "HA Mailbox Card",
   description: "Brievenbuskaart die de laatste grote luxverandering als opening toont.",
+});
+window.customCards.push({
+  type: "ha-crawlspace-card",
+  name: "HA Crawlspace Card",
+  description: "Temperatuur-, luchtvochtigheids- en indicatieve schimmelrisicokaart voor een kruipruimte.",
 });
 window.customCards.push({
   type: "ha-waste-card",
