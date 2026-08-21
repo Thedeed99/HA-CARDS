@@ -2,7 +2,7 @@
  * HA-CARDS - verzameling Home Assistant dashboardkaarten.
  */
 
-const HA_CARDS_VERSION = "1.1.3";
+const HA_CARDS_VERSION = "1.1.4";
 
 console.info(
   `%c HA-CARDS %c v${HA_CARDS_VERSION} `,
@@ -801,7 +801,7 @@ class HaCrawlspaceCard extends HaCardsBase {
     const humidityRisk = Math.max(0, Math.min(86, (humidity - 52) * 2.15));
     const temperatureFactor = temperature >= 10 && temperature <= 30 ? 14 : temperature >= 5 && temperature <= 35 ? 7 : 2;
     const score = Math.round(Math.min(99, humidityRisk + temperatureFactor));
-    const key = score >= 75 ? "crawlspaceRiskVeryHigh" : score >= 50 ? "crawlspaceRiskHigh" : score >= 25 ? "crawlspaceRiskElevated" : "crawlspaceRiskLow";
+    const key = score >= 85 ? "crawlspaceRiskVeryHigh" : score >= 70 ? "crawlspaceRiskHigh" : score >= 50 ? "crawlspaceRiskElevated" : "crawlspaceRiskLow";
     return { score, label: this._t(key) };
   }
 

@@ -3,7 +3,7 @@
 Verzamelproject voor Home Assistant dashboardkaarten. De kaarten zijn bedoeld als HACS custom dashboard resource en worden gebundeld in `ha-cards.js`.
 
 ![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)
-![Version](https://img.shields.io/badge/Version-1.1.3-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.1.4-blue.svg)
 
 ## Kaarten
 
@@ -42,6 +42,7 @@ Een kaart voor de kruipruimte die temperatuur en relatieve luchtvochtigheid toon
 
 - Toont temperatuur en luchtvochtigheid
 - Geeft een risiconiveau en indicatieve score weer
+- Gebruikt ongeveer 70% relatieve luchtvochtigheid als startpunt voor `Verhoogd`
 - Klik op een meetwaarde om de sensor-details te openen
 - De score is een praktische indicatie, geen bouwkundige diagnose; ventilatie, materiaal en oppervlaktetemperatuur worden niet gemeten
 
