@@ -2,7 +2,7 @@
  * HA-CARDS - verzameling Home Assistant dashboardkaarten.
  */
 
-const HA_CARDS_VERSION = "1.1.4";
+const HA_CARDS_VERSION = "1.1.5";
 
 console.info(
   `%c HA-CARDS %c v${HA_CARDS_VERSION} `,
@@ -36,6 +36,7 @@ const MAILBOX_EDITOR_LABELS = {
   entity: "Luxsensor",
   motion_entity: "Bewegingssensor entiteit",
   last_opened_entity: "Laatst geleegd entiteit",
+  temperature_entity: "Temperatuur entiteit",
   threshold: "Lux drempel",
   show_current_lux: "Toon huidige lux",
   show_lux_change: "Toon lux verschil",
@@ -63,6 +64,7 @@ const TRANSLATIONS = {
     mailboxLastOpened: "Mail received",
     mailboxLastEmptied: "Last emptied",
     mailboxNoMotion: "No motion detected yet",
+    mailboxTemperature: "Temperature",
     mailboxLuxChange: "Lux change",
     mailboxCurrentLux: "Current lux",
     mailboxThreshold: "Threshold",
@@ -87,6 +89,7 @@ const TRANSLATIONS = {
     mailboxLastOpened: "Post ontvangen",
     mailboxLastEmptied: "Laatst geleegd",
     mailboxNoMotion: "Nog geen beweging gemeten",
+    mailboxTemperature: "Temperatuur",
     mailboxLuxChange: "Lux verschil",
     mailboxCurrentLux: "Huidige lux",
     mailboxThreshold: "Drempel",
@@ -352,6 +355,7 @@ class HaMailboxCard extends HaCardsBase {
       entity,
       motion_entity: Object.keys(hass?.states || {}).find((id) => id.startsWith("binary_sensor.") && id.includes("motion")),
       last_opened_entity: "input_datetime.brievenbus_laatst_geopend",
+      temperature_entity: Object.keys(hass?.states || {}).find((id) => id.startsWith("sensor.") && (id.includes("temperatuur") || id.includes("temperature"))),
       threshold: 25,
       show_current_lux: true,
       show_lux_change: true,
@@ -439,10 +443,12 @@ class HaMailboxCard extends HaCardsBase {
     const border = toCssColor(this._config.border_color, DEFAULTS.border_color);
     const storedLastOpened = this._dateFromEntity(this._config.last_opened_entity);
     const motionDate = this._dateFromEntity(this._config.motion_entity, true);
+    const temperatureEntity = this._config.temperature_entity;
     const localLastOpened = this._lastOpened ? new Date(this._lastOpened) : undefined;
     const postReceivedDate = motionDate || localLastOpened;
     const postReceived = postReceivedDate ? this._formatMailboxDateTime(postReceivedDate) : this._t("mailboxNoMotion");
     const lastEmptied = storedLastOpened ? this._formatMailboxDateTime(storedLastOpened) : "--";
+    const temperature = temperatureEntity ? this._formatValue(temperatureEntity, 1) : "--";
     const currentLuxLabel = Number.isFinite(currentLux) ? `${Math.round(currentLux)} lx` : this._formatValue(entityId);
     const lastDeltaLabel = Number.isFinite(this._lastDelta) ? `${Math.round(this._lastDelta)} lx` : "--";
     const tiles = [
@@ -528,6 +534,11 @@ class HaMailboxCard extends HaCardsBase {
           text-overflow: ellipsis;
           white-space: nowrap;
           max-width: 140px;
+        }
+        .header-meta-secondary {
+          margin-top: 7px;
+          padding-top: 6px;
+          border-top: 1px solid ${border};
         }
         .visual {
           display: grid;
@@ -654,6 +665,10 @@ class HaMailboxCard extends HaCardsBase {
           <div class="header-meta ${this._config.motion_entity ? "is-clickable" : ""}" tabindex="0" role="button">
             <div class="header-meta-label">${this._t("mailboxLastEmptied")}</div>
             <div class="header-meta-value">${lastEmptied}</div>
+            <div class="header-meta-secondary">
+              <div class="header-meta-label">${this._t("mailboxTemperature")}</div>
+              <div class="header-meta-value">${temperature}</div>
+            </div>
           </div>
         </div>
         <div class="visual ${entityId ? "is-clickable" : ""}" tabindex="0" role="button">
@@ -693,6 +708,7 @@ class HaMailboxCardEditor extends HTMLElement {
       threshold: DEFAULTS.threshold,
       motion_entity: undefined,
       last_opened_entity: undefined,
+      temperature_entity: undefined,
       show_current_lux: true,
       show_lux_change: true,
       show_threshold: true,
@@ -728,6 +744,7 @@ class HaMailboxCardEditor extends HTMLElement {
       { name: "entity", required: true, selector: { entity: { domain: "sensor" } } },
       { name: "motion_entity", selector: { entity: { domain: "binary_sensor" } } },
       { name: "last_opened_entity", selector: { entity: {} } },
+      { name: "temperature_entity", selector: { entity: { domain: "sensor" } } },
       { name: "threshold", selector: { number: { min: 0, step: 1, mode: "box", unit_of_measurement: "lx" } } },
       { name: "show_current_lux", selector: { boolean: {} } },
       { name: "show_lux_change", selector: { boolean: {} } },

@@ -13,6 +13,7 @@ title: Brievenbus
 entity: sensor.brievenbus_illuminance
 motion_entity: binary_sensor.brievenbus_beweging
 last_opened_entity: input_datetime.brievenbus_laatst_geopend
+temperature_entity: sensor.brievenbus_temperatuur
 threshold: 35
 background_color: "#101112"
 text_color: "#ffffff"
