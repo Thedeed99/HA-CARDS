@@ -1,0 +1,45 @@
+input_datetime:
+  brievenbus_laatst_geopend:
+    name: Brievenbus laatst geopend
+    has_date: true
+    has_time: true
+
+input_number:
+  brievenbus_vorige_lux:
+    name: Brievenbus vorige lux
+    min: 0
+    max: 100000
+    step: 1
+    mode: box
+
+automation:
+  - alias: Brievenbus lux opening registreren
+    id: brievenbus_lux_opening_registreren
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: sensor.brievenbus_illuminance
+    variables:
+      drempel_lux: 35
+      huidige_lux: "{{ trigger.to_state.state | float(none) }}"
+      vorige_lux: "{{ states('input_number.brievenbus_vorige_lux') | float(none) }}"
+      lux_verschil: "{{ (huidige_lux - vorige_lux) | abs if huidige_lux is number and vorige_lux is number else 0 }}"
+    condition:
+      - condition: template
+        value_template: "{{ huidige_lux is number }}"
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ vorige_lux is number and lux_verschil >= drempel_lux }}"
+            sequence:
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.brievenbus_laatst_geopend
+                data:
+                  datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.brievenbus_vorige_lux
+        data:
+          value: "{{ huidige_lux }}"
